@@ -13,7 +13,13 @@ app.use((req, res, next) => {
   next();
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+  console.error("❌ ERROR: Missing GEMINI_API_KEY");
+  process.exit(1);
+}
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 app.post('/generate-vegan-recipe', async (req, res) => {
