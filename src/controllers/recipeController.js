@@ -25,28 +25,28 @@ exports.generateRecipe = async (req, res) => {
     10. Provide a **dish name**, **estimated cooking time**, and **number of servings**.
     11. The **output format must follow the exact structure given below in JavaScript**.
     12. Provide a **brief yet engaging description** of the dish, highlighting its key flavors, texture, and appeal.
-    
+
     ---
-    
+
     ### **Input Format:**
     {
       "selectedIngredients": ${selectedIngredients},
       "cuisine": ${cuisine},
       "userInputIngredients": ${userInputIngredients}
     }
-    
+
     ---
-    
+
     ### **Processing Instructions:**
     - **Verify userInputIngredients:** Remove non-plant-based ingredients.
     - **Check for duplicates:** If an item is already in selectedIngredients, do not add it again.
     - **Add valid new ingredients** to the main ingredients list.
     - **Assign portions** to each ingredient based on the type of dish and standard cooking practices.
-    
+
     ---
-    
+
     ### **Expected Output Format (MUST be exactly like this, including syntax and structure):**
-    
+
     const recipe = {
       title: "{{dish name}}",
       description: "{{A short, engaging description of the dish, highlighting its key flavors, texture, and appeal}}",
@@ -71,9 +71,9 @@ exports.generateRecipe = async (req, res) => {
         "{{Step 5: Generated cooking step}}"
       ]
     };
-    
+
     ---
-    
+
     ### **Response Requirements:**
     - **Title:** A creative and authentic name for the dish based on the cuisine and ingredients.
     - **Description:** A brief summary of the dish, including its taste, texture, and uniqueness.
@@ -83,11 +83,11 @@ exports.generateRecipe = async (req, res) => {
     - **Additional Ingredients:** Dynamically generated based on the cuisine (e.g., if it’s an Indian dish, suggest relevant spices).
     - **Instructions:** Clear, logical, and structured, guiding step-by-step from preparation to serving.
     - **Return a valid JSON response** that follows the structure below without trailing commas and comments.
-    
+
     ---
-    
+
     ### **Example AI Response (Based on Input Above):**
-    
+
     const recipe = {
       title: "Middle Eastern Chickpea Stew",
       description: "A hearty and aromatic Middle Eastern-inspired chickpea stew, packed with rich flavors of cumin and smoked paprika, simmered in a tomato-based sauce with fresh spinach.",
@@ -115,20 +115,20 @@ exports.generateRecipe = async (req, res) => {
         "Simmer for 20 minutes, season with salt and pepper, then serve hot."
       ]
     };
-    
+
     ---
-    
+
     ### **Final Instructions:**
     - **DO NOT** change the structure of the output.
     - **DO NOT** add extra fields.
     - **DO NOT** omit any required fields.
     - **Ensure** all additional ingredients and instructions are meaningful and relevant to the cuisine.
-    
+
     Now generate the **mockRecipe** object using the given ingredients and cuisine.
     `
     const result = await generateRecipeContent(prompt);
     const cleanedJson = cleanAIResponse(result);
-
+    console.log('cleanedJson', cleanedJson)
     const recipe = JSON.parse(cleanedJson);
     res.json({ recipe });
   } catch (error) {

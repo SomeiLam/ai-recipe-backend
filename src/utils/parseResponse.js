@@ -1,9 +1,10 @@
 exports.cleanAIResponse = (responseText) => {
   return responseText
-    .replace(/```[\s\S]*?\n/, "") // Remove ```javascript or similar
-    .replace(/```/g, "") // Remove remaining ```
+    .replace(/```[\s\S]*?\n/, "") // Remove code block marker (e.g., ```javascript)
+    .replace(/```/g, "") // Remove remaining triple backticks
     .replace(/const recipe = /, "") // Remove JS variable declaration
     .trim()
+    .replace(/;$/, "") // Remove a trailing semicolon, if any
     .replace(/([{,])(\s*)(\w+):/g, '$1"$3":') // Ensure object keys are properly quoted
     .replace(/,\s*([\]}])/g, "$1"); // Remove trailing commas before closing brackets
 };
