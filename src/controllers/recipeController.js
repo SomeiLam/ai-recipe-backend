@@ -1,52 +1,61 @@
 const { generateRecipeContent, generateIngredientContent } = require("../services/geminiService");
 const { cleanAIResponse, cleanAIResponseNested } = require("../utils/parseResponse");
 
-// Helper: Read file and convert to inline data part
-function fileToGenerativePart(path, mimeType) {
-  return {
-    inlineData: {
-      data: Buffer.from(fs.readFileSync(path)).toString("base64"),
-      mimeType,
-    },
-  };
-}
-
 exports.getIngredientsFromImage = async (req, res) => {
-  const { image } = req.body;
-
-  // If imagePath is not provided, return a bad request error.
-  if (!image) {
-    return res.status(400).json({ error: "Missing image in request" });
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
   }
+
+  // Now you can use the file buffer from req.file.buffer
+  // For instance, convert it to base64:
+  const base64Data = req.file.buffer.toString("base64");
 
   // Optimized prompt: instruct the AI to extract food ingredients
   const prompt = `You are an AI assistant specialized in food ingredients recognition.
-Analyze the attached image and identify all visible food ingredients.
-Return a JSON array of objects where each object has exactly two properties:
-  "id": a unique identifier for the ingredient,
-  "name": the name of the ingredient.
-Remove any duplicate ingredients.
-If no food ingredients are found, return an empty JSON array.`;
+  Analyze the attached image and identify all visible food ingredients.
+  For each ingredient, return an object with the following properties:
+  - "id": a unique string identifier for the ingredient.
+  - "name": the name of the ingredient.
+  - "nutrients": an optional object containing numeric values for "calories", "protein", "carbs", and "fat" if available.
+  - "selected": an optional boolean indicating if the ingredient is selected (default should be false if not specified).
+  
+  Ensure that the JSON output is a flat array of these objects. Remove any duplicate ingredients. If no food ingredients are found, return an empty JSON array.`;
+
 
   try {
     // Create the image part from the file
-    const imagePart = fileToGenerativePart(image, "image/png");
+    const imagePart = {
+      inlineData: {
+        data: base64Data,
+        mimeType: req.file.mimetype, // e.g., "image/png" or "image/avif"
+      },
+    };
 
     // Call the AI model with the prompt and image part
-    const responseText = await generateIngredientContent(prompt, imagePart);
-    console.log('responseText', responseText)
-    // Attempt to parse the response text as JSON
-    const ingredients = JSON.parse(responseText);
+    const rawResponseText = await generateIngredientContent(prompt, imagePart);
+    console.log('rawResponseText', rawResponseText)
 
-    // Return the parsed ingredients JSON
+    // Use a new variable (cleanedResponse) for modifications.
+    let cleanedResponse = rawResponseText.trim();
+    if (cleanedResponse.startsWith("```")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```[a-z]*\n/, "")
+        .replace(/```$/, "")
+        .trim();
+    }
+    // If there's extra content before the JSON, extract from the first '['.
+    const startIndex = cleanedResponse.indexOf('[');
+    if (startIndex !== -1) {
+      cleanedResponse = cleanedResponse.slice(startIndex);
+    }
+
+    const ingredients = JSON.parse(cleanedResponse);
     return res.status(200).json(ingredients);
   } catch (error) {
     console.error("Error generating ingredients from image:", error);
-    return res
-      .status(500)
-      .json({ error: "Failed to generate ingredients from image" });
+    return res.status(500).json({ error: "Failed to generate ingredients" });
   }
-}
+};
 
 exports.generateRecipe = async (req, res) => {
   try {
