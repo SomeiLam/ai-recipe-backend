@@ -13,3 +13,8 @@ exports.generateRecipeContent = async (prompt) => {
   const result = await model.generateContent(prompt);
   return result.response.text();
 };
+
+exports.generateIngredientContent = async (prompt, imagePart) => {
+  const result = await model.generateContent([prompt, imagePart]);
+  return result.response.text();
+}

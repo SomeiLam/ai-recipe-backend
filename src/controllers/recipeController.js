@@ -1,7 +1,253 @@
-const { generateRecipeContent } = require("../services/geminiService");
-const { cleanAIResponse } = require("../utils/parseResponse");
+const { generateRecipeContent, generateIngredientContent } = require("../services/geminiService");
+const { cleanAIResponse, cleanAIResponseNested } = require("../utils/parseResponse");
+
+// Helper: Read file and convert to inline data part
+function fileToGenerativePart(path, mimeType) {
+  return {
+    inlineData: {
+      data: Buffer.from(fs.readFileSync(path)).toString("base64"),
+      mimeType,
+    },
+  };
+}
+
+exports.getIngredientsFromImage = async (req, res) => {
+  const { image } = req.body;
+
+  // If imagePath is not provided, return a bad request error.
+  if (!image) {
+    return res.status(400).json({ error: "Missing image in request" });
+  }
+
+  // Optimized prompt: instruct the AI to extract food ingredients
+  const prompt = `You are an AI assistant specialized in food ingredients recognition.
+Analyze the attached image and identify all visible food ingredients.
+Return a JSON array of objects where each object has exactly two properties:
+  "id": a unique identifier for the ingredient,
+  "name": the name of the ingredient.
+Remove any duplicate ingredients.
+If no food ingredients are found, return an empty JSON array.`;
+
+  try {
+    // Create the image part from the file
+    const imagePart = fileToGenerativePart(image, "image/png");
+
+    // Call the AI model with the prompt and image part
+    const responseText = await generateIngredientContent(prompt, imagePart);
+    console.log('responseText', responseText)
+    // Attempt to parse the response text as JSON
+    const ingredients = JSON.parse(responseText);
+
+    // Return the parsed ingredients JSON
+    return res.status(200).json(ingredients);
+  } catch (error) {
+    console.error("Error generating ingredients from image:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to generate ingredients from image" });
+  }
+}
 
 exports.generateRecipe = async (req, res) => {
+  try {
+    const { ingredients, preferences, language } = req.body;
+
+    // Ensure required fields exist
+    if (!ingredients || !preferences) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const prompt = `You are an expert chef and recipe generator. Your task is to generate three distinct recipes based on the provided leftover ingredients, user preferences, and desired output language. All textual output—including dish names, descriptions, ingredient names, instructions, and all property values—must be fully in the provided language.
+
+Each recipe must strictly reflect the provided cuisine if one is given and it is not "any". If the provided cuisine is "any" or is missing/invalid, then do not apply any specific culinary tradition and set the cuisine to "none".
+
+### Important Rules:
+1. Use the given **ingredients** and create three distinct, cohesive, and flavorful dishes.
+2. Check if each item in **ingredients** is a valid food; ignore any invalid items.
+3. Remove duplicates from the **ingredients**.
+4. If an ingredient is valid and new, add it to the main ingredients list.
+5. Use the provided cuisine exactly as given:
+   - If the cuisine is a specific valid value (e.g., "chinese"), every recipe must strictly reflect that style using appropriate ingredients, seasonings, techniques, and flavor profiles (for example, include soy sauce, ginger, garlic, scallions, rice vinegar, sesame oil, etc.) and set the output "cuisine" field to that value.
+   - If the cuisine is "any" or is missing/invalid, do not enforce any specific culinary tradition and set the output "cuisine" field to "none".
+6. Always return servings as "1".
+7. Assign realistic portion sizes for each ingredient.
+8. Generate additional complementary ingredients (such as seasonings, spices, and oils) that are specific to the provided cuisine and preferences; if no specific cuisine is applied, generate generic and versatile ingredients.
+9. Generate clear and realistic step-by-step cooking instructions.
+10. Provide a creative dish name and estimated cooking time.
+11. Even if the spice level is above 0, the dish does not have to be overly spicy; use it only as a guideline to adjust spice intensity.
+12. If the spiceLevel is higher than 0, ensure that at least one of the generated recipes is not spicy – its preference array should not include "Spicy", and its ingredients and instructions should reflect a non-spicy variant.
+13. All text in the output must be fully in the provided language.
+14. Each recipe must include the following fields:
+    - **id:** a unique id for the recipe.
+    - **cuisine:** the provided cuisine if specified and not "any"; otherwise "none".
+    - **preference:** an array of strings containing only the applicable preferences for the recipe. Possible values are: "Traditional", "Quick cook", "Beginner friendly", "Microwave only", and "Spicy". Include a value only if the corresponding preference is true (for spice, include "Spicy" only if the recipe is intended to be spicy).
+    - **title:** a creative and authentic dish name inspired by the provided cuisine (if applicable) and ingredients.
+    - **description:** a brief yet engaging description of the dish, highlighting its key flavors, textures, and appeal.
+    - **time:** a realistic cooking time based on the dish's complexity.
+    - **servings:** always "1".
+    - **calories:** estimated calories of the dish per 1 person.
+    - **ingredients:** a list of valid ingredients with realistic portion sizes.
+    - **additionalIngredients:** complementary ingredients generated based on the provided cuisine and preferences.
+    - **instructions:** clear, logical, and structured step-by-step cooking directions.
+15. Return three different recipes in a JSON object with keys "0", "1", and "2". Each recipe must include a unique id.
+
+---
+
+### Input Format:
+{
+  "ingredients": ${ingredients},
+  "preferences": {
+    traditional: ${preferences.traditional},
+    quickCook: ${preferences.quickCook},
+    beginner: ${preferences.beginner},
+    microwaveOnly: ${preferences.microwaveOnly},
+    spiceLevel: ${preferences.spiceLevel},
+    cuisine: ${preferences.cuisine},
+    customCuisine: ${preferences.customCuisine}
+  },
+  "language": ${language}
+}
+
+---
+
+### Processing Instructions:
+- Verify ingredients by removing any items that are not valid foods.
+- Adapt each recipe to reflect any specific requirements (traditional, quick-cook, beginner-friendly, or microwave-only) as specified in the preferences.
+- Use the spiceLevel preference (0 to 100) as a guideline to adjust spice intensity.
+- Use cuisine:
+  - If the provided cuisine is a specific valid value (e.g., "chinese"), strictly base all recipes on that cuisine—using typical ingredients, seasonings, cooking methods, and flavor profiles—and set the output "cuisine" field to that value.
+  - If the provided cuisine is "any" or is missing/invalid, do not apply a specific culinary tradition and set the output "cuisine" field to "none".
+- Remove duplicate ingredients.
+- Generate the entire recipe JSON in the language specified by the language parameter (for example, "中文" means all text must be in Chinese).
+
+---
+
+### Expected Output Format (MUST be exactly like this, including syntax and structure):
+
+{
+  0: {
+    id: "{{unique id}}",
+    cuisine: "{{provided cuisine if specified in provided language, otherwise ''}}",
+    preference: [
+      "{{applicable preference 1}}",
+      "{{applicable preference 2}}",
+      "... (only include preferences that are true for this recipe)"
+    ],
+    title: "{{dish name}}",
+    description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal}}",
+    time: "{{estimated cooking time}}",
+    servings: "1",
+    calories: "{{calories of the dish per 1 person}}",
+    ingredients: [
+      { "name": "{{ingredient 1}}", "portion": "{{portion size}}" },
+      { "name": "{{ingredient 2}}", "portion": "{{portion size}}" },
+      { "name": "{{ingredient 3}}", "portion": "{{portion size}}" }
+    ],
+    additionalIngredients: [
+      "{{generated additional ingredient 1}}",
+      "{{generated additional ingredient 2}}",
+      "{{generated additional ingredient 3}}",
+      "{{generated additional ingredient 4}}"
+    ],
+    instructions: [
+      "{{step 1: generated cooking step}}",
+      "{{step 2: generated cooking step}}",
+      "{{step 3: generated cooking step}}",
+      "{{step 4: generated cooking step}}",
+      "{{step 5: generated cooking step}}"
+    ]
+  },
+  1: {
+    id: "{{unique id}}",
+    cuisine: "{{provided cuisine if specified in provided language, otherwise ''}}",
+    preference: [
+      "{{applicable preference 1}}",
+      "{{applicable preference 2}}",
+      "... (only include preferences that are true for this recipe)"
+    ],
+    title: "{{dish name}}",
+    description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal}}",
+    time: "{{estimated cooking time}}",
+    servings: "1",
+    calories: "{{calories of the dish per 1 person}}",
+    ingredients: [
+      { "name": "{{ingredient 1}}", "portion": "{{portion size}}" },
+      { "name": "{{ingredient 2}}", "portion": "{{portion size}}" },
+      { "name": "{{ingredient 3}}", "portion": "{{portion size}}" }
+    ],
+    additionalIngredients: [
+      "{{generated additional ingredient 1}}",
+      "{{generated additional ingredient 2}}",
+      "{{generated additional ingredient 3}}",
+      "{{generated additional ingredient 4}}"
+    ],
+    instructions: [
+      "{{step 1: generated cooking step}}",
+      "{{step 2: generated cooking step}}",
+      "{{step 3: generated cooking step}}",
+      "{{step 4: generated cooking step}}",
+      "{{step 5: generated cooking step}}"
+    ]
+  },
+  2: {
+    id: "{{unique id}}",
+    cuisine: "{{provided cuisine if specified in provided language, otherwise ''}}",
+    preference: [
+      "{{applicable preference 1}}",
+      "{{applicable preference 2}}",
+      "... (only include preferences that are true for this recipe)"
+    ],
+    title: "{{dish name}}",
+    description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal}}",
+    time: "{{estimated cooking time}}",
+    servings: "1",
+    calories: "{{calories of the dish per 1 person}}",
+    ingredients: [
+      { "name": "{{ingredient 1}}", "portion": "{{portion size}}" },
+      { "name": "{{ingredient 2}}", "portion": "{{portion size}}" },
+      { "name": "{{ingredient 3}}", "portion": "{{portion size}}" }
+    ],
+    additionalIngredients: [
+      "{{generated additional ingredient 1}}",
+      "{{generated additional ingredient 2}}",
+      "{{generated additional ingredient 3}}",
+      "{{generated additional ingredient 4}}"
+    ],
+    instructions: [
+      "{{step 1: generated cooking step}}",
+      "{{step 2: generated cooking step}}",
+      "{{step 3: generated cooking step}}",
+      "{{step 4: generated cooking step}}",
+      "{{step 5: generated cooking step}}"
+    ]
+  }
+}
+
+---
+
+### Response Requirements:
+- The recipe JSON must include a unique id, the provided cuisine (or "none" if the cuisine is "any" or missing/invalid), and a preference field that is an array containing only the applicable preferences for that recipe. The possible preference strings are: "Traditional", "Quick cook", "Beginner friendly", "Microwave only", and "Spicy". Include a string only if its corresponding input value is true (for "Spicy", include it only if spiceLevel > 0 and the recipe is intended to be spicy).
+- At least one recipe must be generated that does not include "Spicy" in its preference array, even if spiceLevel > 0.
+- All text in the output must be fully in the language specified by the language parameter.
+- Generate the recipe JSON in the language specified by the language parameter.
+- Return three different recipes in an object with keys 0, 1, and 2.
+- All recipes must strictly reflect the provided cuisine if it is specified and not "any". For example, if the cuisine is "chinese", every recipe must reflect Chinese culinary traditions and use typical ingredients and techniques.
+
+Now generate the **mockRecipe** object using the given ingredients, preferences, and language.
+
+`
+    const result = await generateRecipeContent(prompt);
+    const cleanedJson = cleanAIResponseNested(result);
+    console.log('cleanedJson', cleanedJson)
+    const recipe = JSON.parse(cleanedJson);
+    res.json({ recipe });
+  } catch (error) {
+    console.error("Error generating recipe:", error);
+    res.status(500).json({ error: "Failed to generate recipe" });
+  }
+};
+
+exports.generateVeganRecipe = async (req, res) => {
   try {
     const { selectedIngredients, cuisine, userInputIngredients } = req.body;
 
@@ -79,6 +325,7 @@ exports.generateRecipe = async (req, res) => {
     - **Description:** A brief summary of the dish, including its taste, texture, and uniqueness.
     - **Time:** A realistic cooking time based on the complexity of the dish.
     - **Servings:** A reasonable portion size for the dish.
+    - **Cuisine:** The name of the cuisine in provided language. If no specific cuisine leave blank.
     - **Ingredients:** A list of **selectedIngredients** (including valid user-input ingredients) with assigned portions.
     - **Additional Ingredients:** Dynamically generated based on the cuisine (e.g., if it’s an Indian dish, suggest relevant spices).
     - **Instructions:** Clear, logical, and structured, guiding step-by-step from preparation to serving.
