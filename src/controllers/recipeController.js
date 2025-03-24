@@ -5,6 +5,10 @@ exports.getIngredientsFromImage = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
+  console.log('file', req.file)
+  if (req.file.size > 10 * 1024 * 1024) { // 10MB check
+    throw new Error("File size exceeds limit");
+  }
 
   // Get language parameter from request body and validate it.
   const allowedLanguages = ['English', '中文', '日本語'];
@@ -28,36 +32,54 @@ exports.getIngredientsFromImage = async (req, res) => {
     - "fromImage": always return true.
 
     Return all output in ${language}.
-    Ensure that the JSON output is a flat array of these objects. Remove any duplicate ingredients. If no food ingredients are found, return an empty JSON array.`;
+    Ensure that the JSON output is a flat array of these objects. Remove any duplicate ingredients. If no food ingredients are found, return an empty JSON array. Do not return any text if no food is identified`;
 
   try {
     // Create the image part from the file
     const imagePart = {
       inlineData: {
         data: base64Data,
-        mimeType: req.file.mimetype, // e.g., "image/png" or "image/avif"
+        mimeType: req.file.mimetype, // e.g., "image/png"
       },
     };
 
     // Call the AI model with the prompt and image part
     const rawResponseText = await generateIngredientContent(prompt, imagePart);
-    console.log('rawResponseText', rawResponseText)
+    console.log('rawResponseText', rawResponseText);
 
-    // Use a new variable (cleanedResponse) for modifications.
     let cleanedResponse = rawResponseText.trim();
+
+    // Remove code block formatting if present.
     if (cleanedResponse.startsWith("```")) {
       cleanedResponse = cleanedResponse
         .replace(/^```[a-z]*\n/, "")
         .replace(/```$/, "")
         .trim();
     }
-    // If there's extra content before the JSON, extract from the first '['.
-    const startIndex = cleanedResponse.indexOf('[');
-    if (startIndex !== -1) {
-      cleanedResponse = cleanedResponse.slice(startIndex);
+
+    // If the response contains a JSON code block, extract the JSON content
+    const codeBlockMatch = cleanedResponse.match(/```json([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      cleanedResponse = codeBlockMatch[1].trim();
+    } else {
+      // Fallback: try to locate the first '{' or '[' if no code block was found
+      const jsonStartIndex = cleanedResponse.search(/[\[{]/);
+      if (jsonStartIndex !== -1) {
+        cleanedResponse = cleanedResponse.slice(jsonStartIndex);
+      }
+    }
+    console.log('cleanedResponse', cleanedResponse)
+    // Attempt to parse the cleaned response as JSON
+    let ingredients;
+    try {
+      ingredients = JSON.parse(cleanedResponse);
+    } catch (jsonError) {
+      console.error("JSON parsing error:", jsonError, "Response:", cleanedResponse);
+      return res.status(400).json({
+        error: "Received an unexpected response format. Please try again with a different image.",
+      });
     }
 
-    const ingredients = JSON.parse(cleanedResponse);
     return res.status(200).json(ingredients);
   } catch (error) {
     console.error("Error generating ingredients from image:", error);

@@ -6,16 +6,15 @@ const { PORT } = require("./config/dotenvConfig");
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Or restrict to your frontend domain
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
+// Standard Middleware
+app.use(express.json()); // Parse JSON bodies
 
-app.use(cors());
+// Enable CORS for all origins. Adjust options as needed.
+app.use(cors({
+  origin: "*", // Or specify your frontend domain
+  methods: "GET,POST,PUT,DELETE,OPTIONS",
+  allowedHeaders: "Content-Type,Authorization"
+}));
 
 // Log incoming requests
 app.use((req, res, next) => {
@@ -23,7 +22,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root route (for clarity)
+// Root route for clarity
 app.get("/", (req, res) => {
   res.json({
     message: "🟢 AI Recipe Backend is Running!",
@@ -34,8 +33,16 @@ app.get("/", (req, res) => {
   });
 });
 
-// Use Routes
+// API Routes
 app.use("/", recipeRoutes);
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  // Ensure CORS headers are set even in error responses
+  res.header("Access-Control-Allow-Origin", "*");
+  console.error("Error encountered:", err);
+  res.status(err.status || 500).json({ error: err.message });
+});
 
 // Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
