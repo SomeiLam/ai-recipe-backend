@@ -115,10 +115,10 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
 10. Provide a creative dish name and estimated cooking time.
 11. Even if the spice level is above 0, the dish does not have to be overly spicy; use it only as a guideline to adjust spice intensity.
 12. If the spiceLevel is higher than 0, ensure that at least one of the generated recipes is not spicy – its preference array should not include "Spicy", and its ingredients and instructions should reflect a non-spicy variant. If spiceLevel is 0, none of the generated recipes should be spicy.
-13. All text in the output must be fully in the provided language.
+13. All textual output—including dish names, descriptions, ingredient names, instructions, and all property values—must be entirely in the provided target language. Disregard the native language of the cuisine completely. For example, if the target language is Japanese, every word in the recipe must be in Japanese, even if the cuisine is Chinese.
 14. Each recipe must include the following fields:
     - **id:** a unique id for the recipe.
-    - **cuisine:** the provided cuisine name if specified and not "any"; otherwise "none". For example, if the provided cuisine is Chinese and the language is Japanese, this value should be 中華料理.
+    - **cuisine:** the provided cuisine name if specified and not "any"; otherwise "none". Translate the cuisine name into the target language. For example, if the cuisine is 'chinese' and the target language is Japanese, set the cuisine field to '中華料理' if that is the appropriate Japanese term.
     - **preference:** an array of strings containing only the applicable preferences for the recipe. Possible values are: "Traditional", "Quick cook", "Beginner friendly", "Microwave only", and "Spicy". Include a value only if the corresponding preference is true (for spice, include "Spicy" only if the recipe is intended to be spicy).
     - **title:** a creative and authentic dish name inspired by the provided cuisine (if applicable) and ingredients.
     - **description:** a brief yet engaging description of the dish, highlighting its key flavors, textures, and appeal.
