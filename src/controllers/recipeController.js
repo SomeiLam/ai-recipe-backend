@@ -172,102 +172,96 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
 {
   0: {
     id: "{{unique id}}",
-    recipe: {
-      cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
-      preference: [
-        "{{applicable preference 1}}",
-        "{{applicable preference 2}}",
-        "... (only include preferences that are true for this recipe)"
-      ],
-      title: "{{dish name in provided language}}",
-      description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
-      time: "{{estimated cooking time}}",
-      servings: "1",
-      calories: "{{calories of the dish per 1 person}}",
-      ingredients: [
-        { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
-      ],
-      additionalIngredients: [
-        { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
-      ],
-      instructions: [
-        "{{step 1: generated cooking step in provided language}}",
-        "{{step 2: generated cooking step in provided language}}",
-        "{{step 3: generated cooking step in provided language}}",
-        "{{step 4: generated cooking step in provided language}}",
-        "{{step 5: generated cooking step in provided language}}"
-      ]
-    }
+    cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
+    preference: [
+      "{{applicable preference 1}}",
+      "{{applicable preference 2}}",
+      "... (only include preferences that are true for this recipe)"
+    ],
+    title: "{{dish name in provided language}}",
+    description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
+    time: "{{estimated cooking time}}",
+    servings: "1",
+    calories: "{{calories of the dish per 1 person}}",
+    ingredients: [
+      { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
+    ],
+    additionalIngredients: [
+      { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
+    ],
+    instructions: [
+      "{{step 1: generated cooking step in provided language}}",
+      "{{step 2: generated cooking step in provided language}}",
+      "{{step 3: generated cooking step in provided language}}",
+      "{{step 4: generated cooking step in provided language}}",
+      "{{step 5: generated cooking step in provided language}}"
+    ]
   },
   1: {
     id: "{{unique id}}",
-    recipe: {
-      cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
-      preference: [
-        "{{applicable preference 1}}",
-        "{{applicable preference 2}}",
-        "... (only include preferences that are true for this recipe)"
-      ],
-      title: "{{dish name in provided language}}",
-      description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
-      time: "{{estimated cooking time}}",
-      servings: "1",
-      calories: "{{calories of the dish per 1 person}}",
-      ingredients: [
-        { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
-      ],
-      additionalIngredients: [
-        { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
-      ],
-      instructions: [
-        "{{step 1: generated cooking step in provided language}}",
-        "{{step 2: generated cooking step in provided language}}",
-        "{{step 3: generated cooking step in provided language}}",
-        "{{step 4: generated cooking step in provided language}}",
-        "{{step 5: generated cooking step in provided language}}"
-      ]
-    }
+    cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
+    preference: [
+      "{{applicable preference 1}}",
+      "{{applicable preference 2}}",
+      "... (only include preferences that are true for this recipe)"
+    ],
+    title: "{{dish name in provided language}}",
+    description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
+    time: "{{estimated cooking time}}",
+    servings: "1",
+    calories: "{{calories of the dish per 1 person}}",
+    ingredients: [
+      { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
+    ],
+    additionalIngredients: [
+      { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
+    ],
+    instructions: [
+      "{{step 1: generated cooking step in provided language}}",
+      "{{step 2: generated cooking step in provided language}}",
+      "{{step 3: generated cooking step in provided language}}",
+      "{{step 4: generated cooking step in provided language}}",
+      "{{step 5: generated cooking step in provided language}}"
+    ]
   },
   2: {
     id: "{{unique id}}",
-    recipe: {
-      cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
-      preference: [
-        "{{applicable preference 1}}",
-        "{{applicable preference 2}}",
-        "... (only include preferences that are true for this recipe)"
-      ],
-      title: "{{dish name in provided language}}",
-      description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
-      time: "{{estimated cooking time}}",
-      servings: "1",
-      calories: "{{calories of the dish per 1 person}}",
-      ingredients: [
-        { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
-      ],
-      additionalIngredients: [
-        { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
-        { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
-      ],
-      instructions: [
-        "{{step 1: generated cooking step in provided language}}",
-        "{{step 2: generated cooking step in provided language}}",
-        "{{step 3: generated cooking step in provided language}}",
-        "{{step 4: generated cooking step in provided language}}",
-        "{{step 5: generated cooking step in provided language}}"
-      ]
-    }
+    cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
+    preference: [
+      "{{applicable preference 1}}",
+      "{{applicable preference 2}}",
+      "... (only include preferences that are true for this recipe)"
+    ],
+    title: "{{dish name in provided language}}",
+    description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
+    time: "{{estimated cooking time}}",
+    servings: "1",
+    calories: "{{calories of the dish per 1 person}}",
+    ingredients: [
+      { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
+    ],
+    additionalIngredients: [
+      { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+      { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
+    ],
+    instructions: [
+      "{{step 1: generated cooking step in provided language}}",
+      "{{step 2: generated cooking step in provided language}}",
+      "{{step 3: generated cooking step in provided language}}",
+      "{{step 4: generated cooking step in provided language}}",
+      "{{step 5: generated cooking step in provided language}}"
+    ]
   }
 }
 
