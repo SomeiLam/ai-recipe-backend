@@ -89,7 +89,7 @@ exports.getIngredientsFromImage = async (req, res) => {
 
 exports.generateRecipe = async (req, res) => {
   try {
-    const { ingredients, preferences } = req.body;
+    const { ingredients, preferences, language } = req.body;
 
     // Ensure required fields exist
     if (!ingredients || !preferences) {
@@ -117,7 +117,7 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
 12. If the spiceLevel is higher than 0, ensure that at least one of the generated recipes is not spicy – its preference array should not include "Spicy", and its ingredients and instructions should reflect a non-spicy variant. If spiceLevel is 0, none of the generated recipes should be spicy.
 13. All text in the output must be fully in the provided language.
 14. Each recipe must include the following fields:
-    - **id:** a unique id for the recipe (for all languages).
+    - **id:** a unique id for the recipe.
     - **cuisine:** the provided cuisine name if specified and not "any"; otherwise "none". For example, if the provided cuisine is Chinese and the language is Japanese, this value should be 中華料理.
     - **preference:** an array of strings containing only the applicable preferences for the recipe. Possible values are: "Traditional", "Quick cook", "Beginner friendly", "Microwave only", and "Spicy". Include a value only if the corresponding preference is true (for spice, include "Spicy" only if the recipe is intended to be spicy).
     - **title:** a creative and authentic dish name inspired by the provided cuisine (if applicable) and ingredients.
@@ -150,6 +150,7 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
     cuisine: ${preferences.cuisine},
     customCuisine: ${preferences.customCuisine}
   },
+  "language": ${language}
 }
 
 ---
@@ -162,7 +163,6 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
   - If the provided cuisine is a specific valid value (e.g., "chinese"), strictly base all recipes on that cuisine—using typical ingredients, seasonings, cooking methods, and flavor profiles—and set the output "cuisine" field to that value.
   - If the provided cuisine is "any" or is missing/invalid, do not apply a specific culinary tradition and set the output "cuisine" field to "none".
 - Remove duplicate ingredients.
-- **Ignore the provided language parameter and instead generate the entire recipe JSON output in all three languages: English, Chinese (中文), and Japanese (日本語).** This means each recipe key (0, 1, 2) should have an object with keys "english", "chinese", and "japanese", each containing the recipe translated accordingly.
 - Generate the recipe JSON as specified.
 
 ---
@@ -172,106 +172,102 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
 {
   0: {
     id: "{{unique id}}",
-    english: {
-      cuisine: "{{cuisine name in English (capital), if no specified put 'none'}}",
+    recipe: {
+      cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
       preference: [
         "{{applicable preference 1}}",
         "{{applicable preference 2}}",
         "... (only include preferences that are true for this recipe)"
       ],
-      title: "{{dish name}}",
-      description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal}}",
+      title: "{{dish name in provided language}}",
+      description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
       time: "{{estimated cooking time}}",
       servings: "1",
       calories: "{{calories of the dish per 1 person}}",
       ingredients: [
-        { "name": "{{ingredient 1}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{ingredient 2}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{ingredient 3}}", "portion": "{{portion size}}", "unit": "{{unit}}" }
+        { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
       ],
       additionalIngredients: [
-        { "name": "{{additional ingredient 1}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{additional ingredient 2}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{additional ingredient 3}}", "portion": "{{portion size}}", "unit": "{{unit}}" }
+        { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
       ],
       instructions: [
-        "{{step 1: generated cooking step}}",
-        "{{step 2: generated cooking step}}",
-        "{{step 3: generated cooking step}}",
-        "{{step 4: generated cooking step}}",
-        "{{step 5: generated cooking step}}"
-      ]
-    },
-    chinese: {
-      cuisine: "{{Cuisine name in Chinese, if no specified put 'none'}}",
-      preference: [
-        "{{applicable preference 1}}",
-        "{{applicable preference 2}}",
-        "... (only include preferences that are true for this recipe)"
-      ],
-      title: "{{dish name in Chinese}}",
-      description: "{{a short, engaging description of the dish in Chinese, highlighting its key flavors, texture, and appeal}}",
-      time: "{{estimated cooking time}}",
-      servings: "1",
-      calories: "{{calories of the dish per 1 person}}",
-      ingredients: [
-        { "name": "{{ingredient 1 in Chinese}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{ingredient 2 in Chinese}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{ingredient 3 in Chinese}}", "portion": "{{portion size}}", "unit": "{{unit}}" }
-      ],
-      additionalIngredients: [
-        { "name": "{{additional ingredient 1}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{additional ingredient 2}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{additional ingredient 3}}", "portion": "{{portion size}}", "unit": "{{unit}}" }
-      ],
-      instructions: [
-        "{{step 1: generated cooking step in Chinese}}",
-        "{{step 2: generated cooking step in Chinese}}",
-        "{{step 3: generated cooking step in Chinese}}",
-        "{{step 4: generated cooking step in Chinese}}",
-        "{{step 5: generated cooking step in Chinese}}"
-      ]
-    },
-    japanese: {
-      cuisine: "{{cuisine name in Japanese, if no specified put 'none'}}",
-      preference: [
-        "{{applicable preference 1}}",
-        "{{applicable preference 2}}",
-        "... (only include preferences that are true for this recipe)"
-      ],
-      title: "{{dish name in Japanese}}",
-      description: "{{a short, engaging description of the dish in Japanese, highlighting its key flavors, texture, and appeal}}",
-      time: "{{estimated cooking time}}",
-      servings: "1",
-      calories: "{{calories of the dish per 1 person}}",
-      ingredients: [
-        { "name": "{{ingredient 1 in Japanese}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{ingredient 2 in Japanese}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{ingredient 3 in Japanese}}", "portion": "{{portion size}}", "unit": "{{unit}}" }
-      ],
-      additionalIngredients: [
-        { "name": "{{additional ingredient 1}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{additional ingredient 2}}", "portion": "{{portion size}}", "unit": "{{unit}}" },
-        { "name": "{{additional ingredient 3}}", "portion": "{{portion size}}", "unit": "{{unit}}" }
-      ],
-      instructions: [
-        "{{step 1: generated cooking step in Japanese}}",
-        "{{step 2: generated cooking step in Japanese}}",
-        "{{step 3: generated cooking step in Japanese}}",
-        "{{step 4: generated cooking step in Japanese}}",
-        "{{step 5: generated cooking step in Japanese}}"
+        "{{step 1: generated cooking step in provided language}}",
+        "{{step 2: generated cooking step in provided language}}",
+        "{{step 3: generated cooking step in provided language}}",
+        "{{step 4: generated cooking step in provided language}}",
+        "{{step 5: generated cooking step in provided language}}"
       ]
     }
   },
   1: {
-    english: { ...recipe (structure identical to key 0 > english) },
-    chinese: { ...recipe (structure identical to key 0 > chinese) },
-    japanese: { ...recipe (structure identical to key 0 > japanese) }
+    id: "{{unique id}}",
+    recipe: {
+      cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
+      preference: [
+        "{{applicable preference 1}}",
+        "{{applicable preference 2}}",
+        "... (only include preferences that are true for this recipe)"
+      ],
+      title: "{{dish name in provided language}}",
+      description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
+      time: "{{estimated cooking time}}",
+      servings: "1",
+      calories: "{{calories of the dish per 1 person}}",
+      ingredients: [
+        { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
+      ],
+      additionalIngredients: [
+        { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
+      ],
+      instructions: [
+        "{{step 1: generated cooking step in provided language}}",
+        "{{step 2: generated cooking step in provided language}}",
+        "{{step 3: generated cooking step in provided language}}",
+        "{{step 4: generated cooking step in provided language}}",
+        "{{step 5: generated cooking step in provided language}}"
+      ]
+    }
   },
   2: {
-    english: { ...recipe (structure identical to key 0 > english) },
-    chinese: { ...recipe (structure identical to key 0 > chinese) },
-    japanese: { ...recipe (structure identical to key 0 > japanese) }
+    id: "{{unique id}}",
+    recipe: {
+      cuisine: "{{cuisine name in provided language, if no specified put 'none'}}",
+      preference: [
+        "{{applicable preference 1}}",
+        "{{applicable preference 2}}",
+        "... (only include preferences that are true for this recipe)"
+      ],
+      title: "{{dish name in provided language}}",
+      description: "{{a short, engaging description of the dish, highlighting its key flavors, texture, and appeal in provided language}}",
+      time: "{{estimated cooking time}}",
+      servings: "1",
+      calories: "{{calories of the dish per 1 person}}",
+      ingredients: [
+        { "name": "{{ingredient 1 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{ingredient 2 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{ingredient 3 in provided language}}", "portion": "{{portion size}}", "unit": "{{unit in provided language}}" }
+      ],
+      additionalIngredients: [
+        { "name": "{{additional ingredient 1 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{additional ingredient 2 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" },
+        { "name": "{{additional ingredient 3 in provided language}}", "portion": "{{portion size in provided language}}", "unit": "{{unit in provided language}}" }
+      ],
+      instructions: [
+        "{{step 1: generated cooking step in provided language}}",
+        "{{step 2: generated cooking step in provided language}}",
+        "{{step 3: generated cooking step in provided language}}",
+        "{{step 4: generated cooking step in provided language}}",
+        "{{step 5: generated cooking step in provided language}}"
+      ]
+    }
   }
 }
 
@@ -283,7 +279,7 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
 - **Ignore the provided language parameter; instead, the output must include each recipe translated into English, Chinese, and Japanese.**
 - Generate the recipe JSON with the ingredients list where each ingredient object includes the fields "name", "portion" (numeric value), and "unit" (the measurement unit).
 - All text in the output must be fully in the respective language for each translation.
-- Return three different recipes in an object with keys 0, 1, and 2. Each recipe must include three sub-objects: "english", "chinese", and "japanese", each with a unique id.
+- Return three different recipes in an object with keys 0, 1, and 2.
 - All recipes must strictly reflect the provided cuisine if it is specified and not "any". For example, if the cuisine is "chinese", every recipe must reflect Chinese culinary traditions and use typical ingredients and techniques.
 
 Now generate the **mockRecipe** object using the given ingredients, preferences, and language.
