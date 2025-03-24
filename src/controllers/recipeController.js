@@ -273,7 +273,7 @@ Each recipe must strictly reflect the provided cuisine if one is given and it is
 - **Ignore the provided language parameter; instead, the output must include each recipe translated into English, Chinese, and Japanese.**
 - Generate the recipe JSON with the ingredients list where each ingredient object includes the fields "name", "portion" (numeric value), and "unit" (the measurement unit).
 - All text in the output must be fully in the respective language for each translation.
-- Return three different recipes in an object with keys 0, 1, and 2.
+- Return three different recipes in an object with keys 0, 1, and 2 in provided language. Only return recipe with one language (English, Chinese or Japanese).
 - All recipes must strictly reflect the provided cuisine if it is specified and not "any". For example, if the cuisine is "chinese", every recipe must reflect Chinese culinary traditions and use typical ingredients and techniques.
 
 Now generate the **mockRecipe** object using the given ingredients, preferences, and language.
