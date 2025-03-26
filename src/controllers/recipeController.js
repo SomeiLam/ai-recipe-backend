@@ -1,5 +1,5 @@
 const { generateRecipeContent, generateIngredientContent } = require("../services/geminiService");
-const { cleanAIResponse, cleanAIResponseNested } = require("../utils/parseResponse");
+const { cleanAIResponseNested } = require("../utils/parseResponse");
 
 exports.getIngredientsFromImage = async (req, res) => {
   if (!req.file) {
@@ -10,18 +10,14 @@ exports.getIngredientsFromImage = async (req, res) => {
     throw new Error("File size exceeds limit");
   }
 
-  // Get language parameter from request body and validate it.
   const allowedLanguages = ['English', '中文', '日本語'];
   const language =
     req.body.language && allowedLanguages.includes(req.body.language)
       ? req.body.language
       : 'English';
 
-  // Now you can use the file buffer from req.file.buffer
-  // For instance, convert it to base64:
   const base64Data = req.file.buffer.toString("base64");
 
-  // Optimized prompt: instruct the AI to extract food ingredients
   const prompt = `You are an AI assistant specialized in food ingredients recognition.
     Analyze the attached image and identify all visible food ingredients.
     For each ingredient, return an object with the following properties:
@@ -35,15 +31,13 @@ exports.getIngredientsFromImage = async (req, res) => {
     Ensure that the JSON output is a flat array of these objects. Remove any duplicate ingredients. If no food ingredients are found, return an empty JSON array. Do not return any text if no food is identified`;
 
   try {
-    // Create the image part from the file
     const imagePart = {
       inlineData: {
         data: base64Data,
-        mimeType: req.file.mimetype, // e.g., "image/png"
+        mimeType: req.file.mimetype,
       },
     };
 
-    // Call the AI model with the prompt and image part
     const rawResponseText = await generateIngredientContent(prompt, imagePart);
     console.log('rawResponseText', rawResponseText);
 
@@ -57,19 +51,16 @@ exports.getIngredientsFromImage = async (req, res) => {
         .trim();
     }
 
-    // If the response contains a JSON code block, extract the JSON content
     const codeBlockMatch = cleanedResponse.match(/```json([\s\S]*?)```/);
     if (codeBlockMatch) {
       cleanedResponse = codeBlockMatch[1].trim();
     } else {
-      // Fallback: try to locate the first '{' or '[' if no code block was found
       const jsonStartIndex = cleanedResponse.search(/[\[{]/);
       if (jsonStartIndex !== -1) {
         cleanedResponse = cleanedResponse.slice(jsonStartIndex);
       }
     }
     console.log('cleanedResponse', cleanedResponse)
-    // Attempt to parse the cleaned response as JSON
     let ingredients;
     try {
       ingredients = JSON.parse(cleanedResponse);
@@ -91,7 +82,6 @@ exports.generateRecipe = async (req, res) => {
   try {
     const { ingredients, preferences, language } = req.body;
 
-    // Ensure required fields exist
     if (!ingredients || !preferences) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -418,7 +408,7 @@ exports.generateVeganRecipe = async (req, res) => {
     Now generate the **mockRecipe** object using the given ingredients and cuisine.
     `
     const result = await generateRecipeContent(prompt);
-    const cleanedJson = cleanAIResponse(result);
+    const cleanedJson = cleanAIResponseNested(result);
     console.log('cleanedJson', cleanedJson)
     const recipe = JSON.parse(cleanedJson);
     res.json({ recipe });
